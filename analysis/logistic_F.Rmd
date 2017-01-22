@@ -1,0 +1,157 @@
+---
+title: "Classifications with Features"
+author: "Wei Wang"
+date: 2017-01-21
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+**Last updated:** `r Sys.Date()`
+
+**Code version:** `r workflowr::extract_commit(".", 1)$sha1`
+
+## Feature Learning
+
+This idea is from principal component regression (PCR) which deals with the colinearality in linear regression. 
+
+In PCR, instead of runing regression model with $X$, we use $Xv_K$ as the predictor (new $X$ variables). The $v_K$ is calculate from the PCA: $X = U \Lambda V^T$ and $v_K$ is the first K columns of $V$.
+
+The advantage is not only fix shrinke the variance of the estimation, but also accelerate the computation. Under our framework, we can only use K variables to do SVM or Random Forest, which can much more computationally efficient.
+
+From the view of dimension reduction, we reduce the demision from 1600+ to K, whihc usually I choose 10-20 in this data. The value of K is based on the eigen values from PCA.
+
+### PCA
+
+Here we use PCA to do dimension reduction, and then use the projected data matrix as input for all the classification method.
+
+```{r,eval=TRUE,cache=TRUE,message=FALSE,error=FALSE,warning=FALSE}
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+N = dim(Data)[1]
+P = dim(Data)[2]
+index = sample(N,N)
+K_fold = 5
+test_index = index[1:(N/K_fold)]
+train_index = index[(N/K_fold +1):N]
+X = as.matrix(Data)[,-1]
+X_f_train = PCA_wrapper(X[train_index,])$X
+X_f_test = PCA_wrapper(X[test_index,])$X
+Data_F = as.matrix(Data)[,1:21]
+Data_F[train_index,2:21] = X_f_train
+Data_F[test_index,2:21] = X_f_test
+output1 = fold_compare(Data_F, train_index,test_index,method = "L")
+output1
+output2 = fold_compare(Data_F, train_index,test_index,method = "R")
+output2
+output3 = fold_compare(Data_F, train_index,test_index,method = "S")
+output3
+
+```
+
+The result seem nor very interesting.
+
+### Penalized Matrix Decomposition
+
+This approach put penalty on both factor and loadings to learn ths sparse factor model. In this procedure, we find that random forest seems to be better than others but still not as good as the random forest with original data.
+
+```
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+N = dim(Data)[1]
+P = dim(Data)[2]
+index = sample(N,N)
+K_fold = 5
+test_index = index[1:(N/K_fold)]
+train_index = index[(N/K_fold +1):N]
+X = as.matrix(Data)[,-1]
+X_f_train = PMA_wrapper(X[train_index,])$X
+X_f_test = PMA_wrapper(X[test_index,])$X
+Data_F = as.matrix(Data)[,1:21]
+Data_F[train_index,2:21] = X_f_train
+Data_F[test_index,2:21] = X_f_test
+output1 = fold_compare(Data_F, train_index,test_index,method = "L")
+output1
+output2 = fold_compare(Data_F, train_index,test_index,method = "R")
+output2
+output3 = fold_compare(Data_F, train_index,test_index,method = "S")
+output3
+
+ output1
+  hinge_loss entropy_loss  square_loss 
+   0.7169811   24.0679907    0.2830189 
+ output2 = fold_compare(Data_F, train_index,test_index,method = "R")
+ output2
+  hinge_loss entropy_loss  square_loss 
+   0.7169811    0.5951081    0.2030799 
+ output3 = fold_compare(Data_F, train_index,test_index,method = "S")
+ output3
+  hinge_loss entropy_loss  square_loss 
+   0.7169811    0.6277640    0.2135787 
+```
+
+### Topic model
+
+We think this might be the problem of the data type. The value are binary fata, it more close to count dara than Gaussian data. In the model, we assume that the data follows:
+
+$$
+X_i = MN(m_i,\sum_k \omega_k \Theta_k)
+$$
+
+
+Similarly as PCA or matrix factorization, we use the $\Theta_{[1:K]}$ and project data $X$ on that as the new input data. In this procedure, we can see that the performance is much better than previous ones. SVM performs better than other two methods and seems to be slightly not as good as using the original data. But here we reduce the dimension from 16000+ to 20, which lead to big accerlaration in classification problem. We can try larger K, $K = 30,40,50,\cdots$, to see how is the performance of each method.
+
+
+```{r,eval=TRUE,cache=TRUE,message=FALSE,error=FALSE,warning=FALSE}
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+N = dim(Data)[1]
+P = dim(Data)[2]
+index = sample(N,N)
+K_fold = 5
+test_index = index[1:(N/K_fold)]
+train_index = index[(N/K_fold +1):N]
+X = as.matrix(Data)[,-1]
+X_f_train = TopicM_wrapper(X[train_index,])$X
+X_f_test = TopicM_wrapper(X[test_index,])$X
+Data_F = as.matrix(Data)[,1:21]
+Data_F[train_index,2:21] = X_f_train
+Data_F[test_index,2:21] = X_f_test
+output1 = fold_compare(Data_F, train_index,test_index,method = "L")
+output1
+output2 = fold_compare(Data_F, train_index,test_index,method = "R")
+output2
+output3 = fold_compare(Data_F, train_index,test_index,method = "S")
+output3
+
+```
+
+
+## Summary
+
+Topic model seems have best perfomance comparing with other dimension reduction method. I think it is mainly because our data set is more like count data. 
+
+If we can apply a factor model specificly for binary data, we might get better result and approximate the methods using full data better. Considering the advantage in computational speed, I think this procedure might be also of interest. 
+
+
+## Session Information
+
+```{r session-info}
+```

@@ -1,0 +1,63 @@
+---
+title: "logistic regression"
+author: "Wei Wang"
+date: 2017-01-21
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+**Last updated:** `r Sys.Date()`
+
+**Code version:** `r workflowr::extract_commit(".", 1)$sha1`
+
+
+## Logistic Regression
+
+This report is about the performance of logistic regression. In this report, I use the R package `glmnet` which also provides a regularization term to prevent overfitting. The R function `cv.glmnet` provides a cross validation approach to choose the tuning parameter $\lambda$ on the $l_1$ penalty.
+
+### Randomly Divide Data (training and test)
+
+We randomly choose 20 percent of data as test data and the rest as the training data. The random seed is set to be fixed to compare the result across different methods. After preprocessing the training and test data, we just need call the function `fold_compare` with `method = "L` to get the result of three different scores.
+
+```{r,eval=TRUE,cache=TRUE,message=FALSE,error=FALSE,warning=FALSE}
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+N = dim(Data)[1]
+P = dim(Data)[2]
+index = sample(N,N)
+K_fold = 5
+test_index = index[1:(N/K_fold)]
+train_index = index[(N/K_fold +1):N]
+output = fold_compare(Data, train_index,test_index,method = "L")
+output
+```
+
+### Cross Validation
+
+Here I provide the result of 5 fold cross-validation ressult with `set.seed(9)`. The CV approach is provided by the function `CV_compare` with `method_1 = "L"`. We can also choose the how many fold we want to run this crossvalidation.
+
+```{r,eval=TRUE,cache=TRUE,message=FALSE,error=FALSE,warning=FALSE}
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+cv_output = CV_compare(Data, K = 5,method_1 = "L")
+cv_output
+```
+
+## Session Information
+
+```{r session-info}
+```
