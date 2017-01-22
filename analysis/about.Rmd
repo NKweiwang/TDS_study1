@@ -5,4 +5,4 @@ output:
     toc: false
 ---
 
-Describe your project.
+This project is about to predict the binary response from a Boolean data. 
