@@ -1,0 +1,98 @@
+---
+title: "Support Vector Machaine"
+author: "Wei Wang"
+date: 2017-01-21
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+**Last updated:** `r Sys.Date()`
+
+**Code version:** `r workflowr::extract_commit(".", 1)$sha1`
+
+## SVM for Classification
+
+We use the R package `e1071` and choose the default setting up in convinienve. We can try more choice with different kernel and different types.
+
+### Randomly Divide Data (training and test)
+
+We randomly choose 20 percent of data as test data and the rest as the training data. The random seed is set to be fixed to compare the result across different methods. After preprocessing the training and test data, we just need call the function `fold_compare` with `method = "S"` to get the result of three different scores.
+
+```{r}
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+N = dim(Data)[1]
+P = dim(Data)[2]
+index = sample(N,N)
+K_fold = 5
+test_index = index[1:(N/K_fold)]
+train_index = index[(N/K_fold +1):N]
+# I run the following commant in R console
+#output = fold_compare(Data, train_index,test_index,method = "S")
+```
+
+```
+output
+hinge_loss entropy_loss  square_loss 
+   0.8207547    0.4564338    0.1391308
+```
+
+### Cross Validation
+
+Here I provide the result of 5 fold cross-validation ressult with `set.seed(9)`. The CV approach is provided by the function `CV_compare` with `method_1 = "S"`. We can also choose the how many fold we want to run this crossvalidation.
+
+```{r}
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+# running the cammand in R console
+# cv_output = CV_compare(Data, K = 5,method_1 = "S")
+```
+
+```
+cv_output
+hinge_loss entropy_loss  square_loss 
+   0.2679245    1.7241824    0.5673145
+```
+
+within this 5 fold, each fold provide the socres as followihg 
+```
+hinge_loss entropy_loss  square_loss 
+   0.8207547    0.4564338    0.1391308
+hinge_loss entropy_loss  square_loss 
+   0.1603774    1.9573069    0.6485761
+hinge_loss entropy_loss  square_loss 
+   0.1320755    2.2350150    0.7066509 
+hinge_loss entropy_loss  square_loss 
+  0.08490566   2.02419338   0.68613805
+hinge_loss entropy_loss  square_loss 
+   0.1415094    1.9479630    0.6560766
+```
+
+According to the result above, the first fold we choose provide different trend from others, where other fold performs similarly.
+
+In running this chunk as Rmd file I got some weird error as following
+```
+Error: protect(): protection stack overflow
+Execution halted
+```
+But this chunk works pretty well in R console. Need more time to figure it out.
+
+
+## Session Information
+
+```{r session-info}
+```

@@ -1,0 +1,70 @@
+---
+title: "Random Forest"
+author: "Wei Wang"
+date: 2017-01-21
+output: html_document
+---
+
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+**Last updated:** `r Sys.Date()`
+
+**Code version:** `r workflowr::extract_commit(".", 1)$sha1`
+
+
+## Random Forest
+
+In Random Forest approach, I use the R package `randomForest` for classification, with the default setting up `ntree = 500`.
+
+### Randomly Divide Data (training and test)
+
+We randomly choose 20 percent of data as test data and the rest as the training data. The random seed is set to be fixed to compare the result across different methods. After preprocessing the training and test data, we just need call the function `fold_compare` with `method = "R"` to get the result of three different scores.
+
+```{r}
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+N = dim(Data)[1]
+P = dim(Data)[2]
+index = sample(N,N)
+K_fold = 5
+test_index = index[1:(N/K_fold)]
+train_index = index[(N/K_fold +1):N]
+# I run the following command in R console 
+# output = fold_compare(Data, train_index,test_index,method = "R")
+```
+
+```
+output
+hinge_loss entropy_loss  square_loss 
+   0.8207547    0.5044798    0.1544913 
+```
+
+### Cross Validation
+
+Here I only provide the code for 5 fold cross-validation with `set.seed(9)` since this part take too long to run. The CV approach is provided by the function `CV_compare` with `method_1 = "R"`. We can also choose the how many fold we want to run this crossvalidation. The code is easy to run, which just need some time.
+
+```{r}
+source("../code/Cfunctions.R")
+source("../code/Sfunctions.R")
+source("../code/Ffunctions.R")
+source("../code/Dfunctions.R")
+set.seed(9)
+Data = data.table::fread("../data/DScasestudy1.txt")
+# all we need to do is just run the following two lines 
+#cv_output = CV_compare(Data, K = 5,method_1 = "R")
+#cv_output
+```
+
+## Session Information
+
+```{r session-info}
+```
