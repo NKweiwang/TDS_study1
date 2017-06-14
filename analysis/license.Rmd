@@ -5,6 +5,8 @@ output:
     toc: false
 ---
 
+The following contents are from the template of "workflowr" package. This might not relevant to this case study report. 
+
 What license are you using for your code? See [choosealicense.com][choose] for
 help deciding. And don't forget to update the file `LICENSE` in the root of your
 Git repo.
