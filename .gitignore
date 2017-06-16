@@ -3,7 +3,6 @@
 .RData
 .Ruserdata
 .DS_Store
-data
 analysis/figure
 analysis/*html
 analysis/*_cache
